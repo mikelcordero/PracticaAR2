@@ -206,7 +206,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 854139661}
   m_Direction: 0
   m_MinValue: 0
-  m_MaxValue: 1
+  m_MaxValue: 60
   m_WholeNumbers: 0
   m_Value: 0
   m_OnValueChanged:
@@ -884,7 +884,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 230487040}
   m_Direction: 0
   m_MinValue: 0
-  m_MaxValue: 1
+  m_MaxValue: 10
   m_WholeNumbers: 0
   m_Value: 0
   m_OnValueChanged:
@@ -2665,7 +2665,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 962084325}
   m_Direction: 0
   m_MinValue: 0
-  m_MaxValue: 1
+  m_MaxValue: 10
   m_WholeNumbers: 0
   m_Value: 0
   m_OnValueChanged:
@@ -2739,9 +2739,9 @@ MonoBehaviour:
   sliderTiempo: {fileID: 6965273}
   sliderHorizontales: {fileID: 375416825}
   sliderVerticales: {fileID: 2055665792}
-  textoTiempo: {fileID: 0}
-  textoHorizontales: {fileID: 0}
-  textoVerticales: {fileID: 0}
+  textoTiempo: {fileID: 1007080953}
+  textoHorizontales: {fileID: 196659308}
+  textoVerticales: {fileID: 184792170}
   toggleOclusion: {fileID: 515319586}
 --- !u!4 &2076556401
 Transform:

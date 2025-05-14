@@ -1,6 +1,6 @@
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using TMPro;
 
 public class EscenaInicialController : MonoBehaviour
@@ -11,14 +11,13 @@ public class EscenaInicialController : MonoBehaviour
     public Slider sliderVerticales;
 
     [Header("Textos")]
-    public TextMeshPro textoTiempo;
-    public TextMeshPro textoHorizontales;
-    public TextMeshPro textoVerticales;
+    public TMP_Text textoTiempo;
+    public TMP_Text textoHorizontales;
+    public TMP_Text textoVerticales;
 
-    [Header("Opción de oclusión")]
+    [Header("Oclusión")]
     public Toggle toggleOclusion;
 
-    // Variables globales que se usarán en la siguiente escena
     public static float tiempoLimite;
     public static int planosHorizontales;
     public static int planosVerticales;
@@ -26,29 +25,35 @@ public class EscenaInicialController : MonoBehaviour
 
     void Start()
     {
-        // Inicializamos los textos con el valor inicial de los sliders
         ActualizarTextos();
     }
 
     void Update()
     {
-        // Actualizamos los textos en tiempo real
         ActualizarTextos();
     }
 
     void ActualizarTextos()
     {
-        textoTiempo.text = sliderTiempo.value.ToString("0") + " s";
-        textoHorizontales.text = sliderHorizontales.value.ToString("0");
-        textoVerticales.text = sliderVerticales.value.ToString("0");
+        int tiempo = Mathf.RoundToInt(sliderTiempo.value);
+        int hor = Mathf.RoundToInt(sliderHorizontales.value);
+        int ver = Mathf.RoundToInt(sliderVerticales.value);
+
+        textoTiempo.text = "Tiempo: " + tiempo + " s";
+        textoHorizontales.text = "Planos Horizontales: " + hor;
+        textoVerticales.text = "Planos Verticales: " + ver;
+
+        Debug.Log("Tiempo: " + tiempo + " | H: " + hor + " | V: " + ver);
     }
 
     public void EmpezarJuego()
     {
-        tiempoLimite = sliderTiempo.value;
+        tiempoLimite = Mathf.RoundToInt(sliderTiempo.value);
         planosHorizontales = Mathf.RoundToInt(sliderHorizontales.value);
         planosVerticales = Mathf.RoundToInt(sliderVerticales.value);
         oclusionActiva = toggleOclusion.isOn;
+
+        Debug.Log("EmpezarJuego → Tiempo: " + tiempoLimite + " | H: " + planosHorizontales + " | V: " + planosVerticales + " | Oclusión: " + oclusionActiva);
 
         SceneManager.LoadScene("EscenaJuego");
     }
