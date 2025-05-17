@@ -23,6 +23,9 @@ public class EscenaInicialController : MonoBehaviour
     public static int planosVerticales;
     public static bool oclusionActiva;
 
+    public static int numGemas;
+
+
     void Start()
     {
         ActualizarTextos();
