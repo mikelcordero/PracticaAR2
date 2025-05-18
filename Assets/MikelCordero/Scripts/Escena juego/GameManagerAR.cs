@@ -21,16 +21,24 @@ public class GameManagerAR : MonoBehaviour
     [Header("Audio")]
     public AudioSource audioFondo;
 
+    [Header("Audios adicionales")]
+    public AudioClip sonidoGema;
+    public AudioClip sonidoGanar;
+    public AudioClip sonidoPerder;
+
     [Header("Configuración gemas")]
     public GameObject gemaPrefab;
 
     private int horizontalesDetectados;
     private int verticalesDetectados;
     private int gemasRecogidas;
+    private int totalGemasARecoger;
     private float tiempoRestante;
 
     private bool juegoIniciado = false;
     private bool juegoTerminado = false;
+
+    private AudioSource audioEfectos;
 
     void Start()
     {
@@ -40,7 +48,14 @@ public class GameManagerAR : MonoBehaviour
         textoResultado.gameObject.SetActive(false);
         botonEmpezar.SetActive(false);
 
-        audioFondo.Play();
+        audioEfectos = gameObject.AddComponent<AudioSource>();
+        audioEfectos.playOnAwake = false;
+
+        if (audioFondo != null)
+        {
+            audioFondo.Stop();
+            audioFondo.time = 0f;
+        }
     }
 
     void Update()
@@ -54,6 +69,10 @@ public class GameManagerAR : MonoBehaviour
                 verticalesDetectados >= EscenaInicialController.planosVerticales)
             {
                 botonEmpezar.SetActive(true);
+            }
+            else
+            {
+                botonEmpezar.SetActive(false);
             }
         }
         else if (!juegoTerminado)
@@ -89,40 +108,63 @@ public class GameManagerAR : MonoBehaviour
     }
 
     public void IniciarJuego()
-{
-    juegoIniciado = true;
+    {
+        if (juegoIniciado) return; // ✅ Protección contra ejecución doble
 
-    textoHorizontales.gameObject.SetActive(false);
-    textoVerticales.gameObject.SetActive(false);
-    textoTemporizador.gameObject.SetActive(true);
-    textoGemas.gameObject.SetActive(true);
-    botonEmpezar.SetActive(false);
+        juegoIniciado = true;
 
-    Debug.Log("Iniciando juego..."); // AÑADIDO
+        if (audioFondo != null)
+        {
+            audioFondo.time = 0f;
+            audioFondo.Play();
+        }
 
-    InstanciarGemas();
-    ActualizarUIGemas();
-}
+        totalGemasARecoger = EscenaInicialController.planosHorizontales + EscenaInicialController.planosVerticales;
 
+        textoHorizontales.gameObject.SetActive(false);
+        textoVerticales.gameObject.SetActive(false);
+        textoTemporizador.gameObject.SetActive(true);
+        textoGemas.gameObject.SetActive(true);
+        botonEmpezar.SetActive(false);
+
+        InstanciarGemas();
+        ActualizarUIGemas();
+    }
 
     void InstanciarGemas()
-{
-    int cantidad = EscenaInicialController.numGemas;
-
-    foreach (var plane in planeManager.trackables)
     {
-        if (cantidad <= 0) break;
+        // ✅ Eliminar gemas antiguas si existen
+        foreach (var gema in GameObject.FindGameObjectsWithTag("Gema"))
+        {
+            Destroy(gema);
+        }
 
-        Vector3 pos = plane.transform.position + new Vector3(Random.Range(-0.3f, 0.3f), 0.05f, Random.Range(-0.3f, 0.3f));
-        GameObject gema = Instantiate(gemaPrefab, pos, Quaternion.identity);
-        gema.AddComponent<GemaAR>().gameManager = this;
+        int gemasHorizontalesRestantes = EscenaInicialController.planosHorizontales;
+        int gemasVerticalesRestantes = EscenaInicialController.planosVerticales;
 
-        Debug.Log("Gema instanciada en: " + pos); // <-- AÑADE ESTA LÍNEA
+        foreach (var plane in planeManager.trackables)
+        {
+            if (gemasHorizontalesRestantes == 0 && gemasVerticalesRestantes == 0)
+                break;
 
-        cantidad--;
+            if (plane.alignment == UnityEngine.XR.ARSubsystems.PlaneAlignment.HorizontalUp && gemasHorizontalesRestantes > 0)
+            {
+                Vector3 pos = plane.transform.position + new Vector3(Random.Range(-0.3f, 0.3f), 0.15f, Random.Range(-0.3f, 0.3f));
+                GameObject gema = Instantiate(gemaPrefab, pos, Quaternion.identity);
+                gema.tag = "Gema"; // Asegúrate de que el prefab tenga este tag también
+                gema.AddComponent<GemaAR>().gameManager = this;
+                gemasHorizontalesRestantes--;
+            }
+            else if (plane.alignment == UnityEngine.XR.ARSubsystems.PlaneAlignment.Vertical && gemasVerticalesRestantes > 0)
+            {
+                Vector3 pos = plane.transform.position + new Vector3(0, 0, Random.Range(-0.3f, 0.3f));
+                GameObject gema = Instantiate(gemaPrefab, pos, Quaternion.identity);
+                gema.tag = "Gema";
+                gema.AddComponent<GemaAR>().gameManager = this;
+                gemasVerticalesRestantes--;
+            }
+        }
     }
-}
-
 
     public void RecolectarGema(GameObject gema)
     {
@@ -130,7 +172,10 @@ public class GameManagerAR : MonoBehaviour
         gemasRecogidas++;
         ActualizarUIGemas();
 
-        if (gemasRecogidas >= EscenaInicialController.numGemas)
+        if (sonidoGema != null)
+            audioEfectos.PlayOneShot(sonidoGema);
+
+        if (gemasRecogidas >= totalGemasARecoger)
         {
             FinDelJuego(true);
         }
@@ -138,22 +183,28 @@ public class GameManagerAR : MonoBehaviour
 
     void ActualizarUIGemas()
     {
-        textoGemas.text = $"Gemas recogidas: {gemasRecogidas} / {EscenaInicialController.numGemas}";
+        textoGemas.text = $"Gemas recogidas: {gemasRecogidas} / {totalGemasARecoger}";
     }
 
     void FinDelJuego(bool victoria)
-{
-    juegoTerminado = true;
+    {
+        juegoTerminado = true;
 
-    // Ocultar UI del juego
-    textoTemporizador.gameObject.SetActive(false);
-    textoGemas.gameObject.SetActive(false);
+        if (audioFondo != null && audioFondo.isPlaying)
+        {
+            audioFondo.Stop();
+        }
 
-    // Mostrar resultado final
-    textoResultado.gameObject.SetActive(true);
-    textoResultado.text = victoria ? "¡Has ganado!" : "Has perdido";
-}
+        textoTemporizador.gameObject.SetActive(false);
+        textoGemas.gameObject.SetActive(false);
+        textoResultado.gameObject.SetActive(true);
+        textoResultado.text = victoria ? "¡Has ganado!" : "Has perdido";
 
+        if (victoria && sonidoGanar != null)
+            audioEfectos.PlayOneShot(sonidoGanar);
+        else if (!victoria && sonidoPerder != null)
+            audioEfectos.PlayOneShot(sonidoPerder);
+    }
 
     public void SalirDelJuego()
     {

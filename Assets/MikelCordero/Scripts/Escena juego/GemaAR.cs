@@ -4,8 +4,12 @@ public class GemaAR : MonoBehaviour
 {
     public GameManagerAR gameManager;
 
-    void OnMouseDown()
+    void OnTriggerEnter(Collider other)
     {
-        gameManager.RecolectarGema(gameObject);
+        if (other.CompareTag("MainCamera"))
+        {
+            Debug.Log("Gema recogida por la cámara");
+            gameManager.RecolectarGema(gameObject);
+        }
     }
 }
